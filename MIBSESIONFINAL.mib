@@ -1,0 +1,291 @@
+MIBSESIONFINAL DEFINITIONS ::= BEGIN
+
+IMPORTS
+    MODULE-IDENTITY, enterprises
+    FROM RFC1155-SMI
+    OBJECT-TYPE
+    FROM RFC-1212
+    IpAddress
+    FROM SNMPv2-SMI;
+
+arduinoMIB MODULE-IDENTITY
+    LAST-UPDATED "202404120000Z"
+    ORGANIZATION "Equipo 10 Gestion de Redes"
+    CONTACT-INFO "trabajogredes24@gmail.com"
+    DESCRIPTION
+            " Proyecto escalable de placas monitorizadas para la gestión remota de dispositivos electrónicos
+            "
+    ::= { enterprises 36582 }
+
+
+
+informacionDeGestion OBJECT IDENTIFIER ::= { arduinoMIB 1 }
+valoresLeidos        OBJECT IDENTIFIER ::= { arduinoMIB 2 }
+eventos              OBJECT IDENTIFIER ::= { arduinoMIB 3 }
+
+
+-- Definicion del string utilizado en toda la MIB
+DisplayString ::=
+              OCTET STRING (SIZE (0..255))
+
+
+
+-- Definicion de los escalares del grupo de informacion acerca de gestion del prototipo arduino, 
+-- se presenta informacion tanto del dispositivo como de la persona y equipo de contacto.
+
+identificador OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "
+              Numero identificador del prototipo arduino gestionado
+            "
+    ::= { informacionDeGestion 1 }
+
+localizacion OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "
+              Localizacion del prototipo arduino
+            "
+    ::= { informacionDeGestion 2 }
+
+direccionIP OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "
+              Direccion IP asignada al arduino 
+            "
+    ::= { informacionDeGestion 3 }
+
+tiempoEncendido OBJECT-TYPE
+    SYNTAX  TimeTicks
+    ACCESS  read-only
+    STATUS  mandatory
+    DESCRIPTION
+            "
+              Tiempo desde el encendido del prototipo
+            "
+    ::= { informacionDeGestion 4 }
+
+
+encargadoDeGestion OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "
+              Nombre de la persona encargada de gestionar la placa 
+            "
+    ::= { informacionDeGestion 5 }
+
+telefonoContacto OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "
+              Telefono de contacto para resolver dudas acerca de la gestion del prototipo 
+            "
+    ::= { informacionDeGestion 6 }
+
+correoContacto OBJECT-TYPE
+    SYNTAX  DisplayString
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "
+              Correo electrónico de contacto del grupo encargado del proyecto
+            "
+    ::= { informacionDeGestion 7 }
+
+
+
+
+
+
+
+--A partir de aqui comienza el grupo de valores leidos, grupo que contiene informacion acerca de los sensores implementados
+
+
+ arduinoTable OBJECT-TYPE
+     SYNTAX  SEQUENCE OF Filas
+     ACCESS  not-accessible
+     STATUS  mandatory
+     DESCRIPTION
+             " Tabla que contiene la información de gestión que implementa nuestro dispositivo Arduino "
+     ::= { valoresLeidos 1 }
+
+ arduinoEntry OBJECT-TYPE
+     SYNTAX  Filas
+     ACCESS  not-accessible
+     STATUS  mandatory
+     DESCRIPTION
+             " Filas de la tabla"
+  
+     INDEX  { indice }
+     ::= { arduinoTable 1 }
+
+ Filas::=
+     SEQUENCE {
+         indice
+             INTEGER,
+         descrSensor
+             DisplayString,
+         valorLeido
+             INTEGER,
+         instanteLectura
+            TimeTicks,
+         tiempoMuestreo
+            INTEGER
+         
+     }
+
+ indice OBJECT-TYPE
+     SYNTAX  INTEGER 
+     ACCESS  read-only
+     STATUS  mandatory
+     DESCRIPTION
+             " Número de la variable arduino, esta es la fila indice "
+     ::= { arduinoEntry 1 }
+
+ descrSensor OBJECT-TYPE
+     SYNTAX  DisplayString
+     ACCESS  read-only
+     STATUS  mandatory
+     DESCRIPTION
+             " Nombre de la variable o sensor a leer "
+     ::= { arduinoEntry 2 }
+
+ valorLeido OBJECT-TYPE
+     SYNTAX  INTEGER
+     ACCESS  read-write
+     STATUS  mandatory
+     DESCRIPTION
+             " Valor leido del sensor "
+     ::= { arduinoEntry 3 }
+ 
+ instanteLectura OBJECT-TYPE
+     SYNTAX  TimeTicks
+     ACCESS  read-write
+     STATUS  mandatory
+     DESCRIPTION
+             "
+               Valor de la variable sysUpTime en el instante de lectura del ultimo valor leido
+             "
+     ::= { arduinoEntry 4 }
+ tiempoMuestreo OBJECT-TYPE
+    SYNTAX  INTEGER
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "
+              Valor en segundos de el tiempo en muestrear los parámetros obtenidos por arduino.
+            "
+    ::= { arduinoEntry 5 }
+
+
+
+
+
+
+    -- A partir de aquí comienza el grupo de eventos, que proporciona una tabla para poder establecer hasta 5 eventos distintos 
+
+
+    eventosTable OBJECT-TYPE
+     SYNTAX  SEQUENCE OF FilasEventos
+     ACCESS  not-accessible
+     STATUS  mandatory
+     DESCRIPTION
+             " Tabla que contiene la eventos que implementa nuestro dispositivo Arduino "
+     ::= { eventos 1 }
+
+ eventosEntry OBJECT-TYPE
+     SYNTAX  FilasEventos
+     ACCESS  not-accessible
+     STATUS  mandatory
+     DESCRIPTION
+             " Filas de la tabla"
+  
+     INDEX  { indiceEv }
+     ::= { eventosTable 1 }
+
+ FilasEventos::=
+     SEQUENCE {
+         indiceEv
+             INTEGER,
+         ifIndexSensor
+             INTEGER,
+         descrEvento
+             DisplayString,
+         umbralSup
+             INTEGER,
+         umbralInf
+            INTEGER,
+         ipReceptorTrap
+            IpAddress
+         
+     }
+
+ indiceEv OBJECT-TYPE
+     SYNTAX  INTEGER 
+     ACCESS  read-only
+     STATUS  mandatory
+     DESCRIPTION
+             " Número de la variable arduino, esta es la fila indice "
+     ::= { eventosEntry 1 }
+
+ ifIndexSensor OBJECT-TYPE
+     SYNTAX  INTEGER
+     ACCESS  read-write
+     STATUS  mandatory
+     DESCRIPTION
+             " Coincide con la columna indice de la tabla de valoresLeidos, para establecer que sensor será al que se le aplique el evento "
+     ::= { eventosEntry 2 }
+
+    
+   descrEvento OBJECT-TYPE
+     SYNTAX  DisplayString
+     ACCESS  read-write
+     STATUS  mandatory
+     DESCRIPTION
+             " Descripcion personalizada del evento  "
+     ::= { eventosEntry 3 }
+
+ umbralSup OBJECT-TYPE
+     SYNTAX  INTEGER
+     ACCESS  read-write
+     STATUS  mandatory
+     DESCRIPTION
+             " Valor leido del sensor "
+     ::= { eventosEntry 4 }
+ 
+ umbralInf OBJECT-TYPE
+     SYNTAX  INTEGER
+     ACCESS  read-write
+     STATUS  mandatory
+     DESCRIPTION
+             "
+               Valor de la variable sysUpTime en el instante de lectura del ultimo valor leido
+             "
+     ::= { eventosEntry 5 }
+ ipReceptorTrap OBJECT-TYPE
+    SYNTAX  IpAddress
+    ACCESS  read-write
+    STATUS  mandatory
+    DESCRIPTION
+            "
+              Valor en segundos de el tiempo en muestrear los parámetros obtenidos por arduino.
+            "
+    ::= { eventosEntry 6 }
+
+
+
+
+
+END
