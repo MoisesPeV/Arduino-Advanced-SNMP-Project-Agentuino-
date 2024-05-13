@@ -6,3 +6,4 @@ on an Arduino Mega 2560 board, with a W5100 for Ethernet connectivity.
                        -Sensors (reading values)
                        -Events
 
+Detailed Video -- https://www.youtube.com/watch?v=vtchX_gNrCQ
